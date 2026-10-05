@@ -1,0 +1,42 @@
+name: Apple TV TW deals
+
+on:
+  schedule:
+    - cron: "5 1 * * *" # UTC 01:05 = 台灣時間 09:05（GitHub 排程可能延遲數分鐘到數十分鐘）
+  workflow_dispatch: # 允許在 Actions 頁面手動執行
+
+permissions:
+  contents: write # 需要把更新後的 state.json commit 回 repo
+
+concurrency:
+  group: apple-tv-deals
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Check deals and notify
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python apple_tv_deals.py
+
+      # 價格紀錄要跨次執行保留，所以存回 repo；即使上一步部分失敗也要保存已通知的紀錄
+      - name: Save price history
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git diff --cached --quiet || (git commit -m "chore: update price history" && git push)
