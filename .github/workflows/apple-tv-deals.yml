@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "5 1 * * *" # UTC 01:05 = 台灣時間 09:05（GitHub 排程可能延遲數分鐘到數十分鐘）
   workflow_dispatch: # 允許在 Actions 頁面手動執行
+    inputs:
+      send_test:
+        description: "只發送一則測試訊息（確認 Telegram 設定），不檢查特價、不更新價格紀錄"
+        type: boolean
+        default: false
 
 permissions:
   contents: write # 需要把更新後的 state.json commit 回 repo
@@ -30,7 +35,8 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python apple_tv_deals.py
+          SCRIPT_ARGS: ${{ inputs.send_test && '--test' || '' }}
+        run: python apple_tv_deals.py $SCRIPT_ARGS
 
       # 價格紀錄要跨次執行保留，所以存回 repo；即使上一步部分失敗也要保存已通知的紀錄
       - name: Save price history
