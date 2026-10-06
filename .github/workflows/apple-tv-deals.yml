@@ -2,7 +2,7 @@ name: Apple TV TW deals
 
 on:
   schedule:
-    - cron: "5 1 * * *" # UTC 01:05 = 台灣時間 09:05（GitHub 排程可能延遲數分鐘到數十分鐘）
+    - cron: "17 1 * * *" # UTC 01:17 = 台灣時間 09:17（避開整點附近的尖峰，GitHub 排程仍可能延遲）
   workflow_dispatch: # 允許在 Actions 頁面手動執行
     inputs:
       send_test:
